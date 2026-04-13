@@ -20,7 +20,7 @@ const cardAnim = {
   hidden: { opacity: 0, y: 20 },
   show: (i: number) => ({
     opacity: 1, y: 0,
-    transition: { delay: i * 0.1, duration: 0.4, ease: "easeOut" },
+    transition: { delay: i * 0.1, duration: 0.4, ease: "easeOut" as const },
   }),
 };
 
@@ -201,7 +201,7 @@ const DashboardPage: React.FC = () => {
                     dataKey="value"
                     nameKey="type"
                     animationDuration={800}
-                    label={({ type, percent }) => `${type} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }: { name?: string; percent?: number }) => `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`}
                   >
                     {wasteBreakdown.map((entry) => (
                       <Cell key={entry.type} fill={entry.color} />
