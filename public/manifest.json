@@ -1,0 +1,9 @@
+{
+  "name": "EcoConnect Admin",
+  "short_name": "EcoAdmin",
+  "start_url": "/admin/dashboard",
+  "display": "standalone",
+  "theme_color": "#1DB36E",
+  "background_color": "#ffffff",
+  "icons": []
+}
