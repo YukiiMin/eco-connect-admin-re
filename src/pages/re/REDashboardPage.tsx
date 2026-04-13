@@ -15,7 +15,7 @@ const cardAnim = {
   hidden: { opacity: 0, y: 20 },
   show: (i: number) => ({
     opacity: 1, y: 0,
-    transition: { delay: i * 0.08, duration: 0.4, ease: "easeOut" },
+    transition: { delay: i * 0.08, duration: 0.4, ease: [0, 0, 0.2, 1] as const },
   }),
 };
 
@@ -54,9 +54,10 @@ const alertColorMap = {
 };
 
 /** Custom tooltip for weekly chart */
-const WeeklyTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; dataKey: string }>; label?: string }) => {
-  if (!active || !payload) return null;
-  const data = payload[0]?.payload as typeof weeklyTrend[0] | undefined;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const WeeklyTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  const data = payload[0]?.payload;
   return (
     <div className="rounded-lg border border-border bg-card p-3 shadow-xl text-xs space-y-1">
       <p className="font-semibold text-card-foreground">{label}</p>
