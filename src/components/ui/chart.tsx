@@ -89,27 +89,20 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-    React.ComponentProps<"div"> & {
-      hideLabel?: boolean;
-      hideIndicator?: boolean;
-      indicator?: "line" | "dot" | "dashed";
-      nameKey?: string;
-      labelKey?: string;
-    }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any
 >(
   (
     {
       active,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       payload: payloadProp,
       className,
       indicator = "dot",
       hideLabel = false,
       hideIndicator = false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       label: labelProp,
       labelFormatter,
       labelClassName,
@@ -117,7 +110,8 @@ const ChartTooltipContent = React.forwardRef<
       color,
       nameKey,
       labelKey,
-    },
+    }: // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    any,
     ref,
   ) => {
     const { config } = useChart();
