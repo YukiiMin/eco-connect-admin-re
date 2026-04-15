@@ -3,20 +3,14 @@ import { reAccounts as initialAccounts, type REAccount } from "@/mock/admin-re-a
 import { disputes as initialDisputes, type Dispute } from "@/mock/admin-disputes";
 
 interface AdminState {
-  /** RE accounts list */
   accounts: REAccount[];
-  /** Disputes list */
   disputes: Dispute[];
-  /** Approve an RE account */
   approveAccount: (id: string) => void;
-  /** Reject an RE account */
   rejectAccount: (id: string) => void;
-  /** Suspend an RE account */
   suspendAccount: (id: string, reason: string, duration: string) => void;
-  /** Reactivate a suspended RE account */
   reactivateAccount: (id: string) => void;
-  /** Set verdict on a dispute */
-  setVerdict: (id: string, verdict: "RESOLVED_UPHELD" | "RESOLVED_DISMISSED", reason?: string) => void;
+  /** Set verdict: RESOLVED_REFUNDED or RESOLVED_REJECTED */
+  setVerdict: (id: string, verdict: "RESOLVED_REFUNDED" | "RESOLVED_REJECTED", reason: string) => void;
 }
 
 /** Admin portal Zustand store */
@@ -61,7 +55,7 @@ export const useAdminStore = create<AdminState>((set) => ({
           ? {
               ...d,
               status: verdict,
-              verdict: verdict === "RESOLVED_UPHELD" ? "UPHELD" : "DISMISSED",
+              verdict: verdict === "RESOLVED_REFUNDED" ? "REFUNDED" : "REJECTED",
               resolvedAt: new Date().toISOString(),
               resolvedBy: "Admin",
               resolvedReason: reason,
