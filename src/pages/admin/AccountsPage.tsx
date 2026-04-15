@@ -15,12 +15,12 @@ import { cn } from "@/lib/utils";
 
 type FilterTab = "ALL" | "ACTIVE" | "PENDING" | "SUSPENDED";
 
-const statusBadge: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
-  ACTIVE: { variant: "default", label: "Hoạt động" },
-  WARNING: { variant: "outline", label: "Cảnh báo" },
-  PENDING: { variant: "secondary", label: "Chờ duyệt" },
-  SUSPENDED: { variant: "destructive", label: "Đình chỉ" },
-  REJECTED: { variant: "destructive", label: "Từ chối" },
+const statusBadge: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string; colorClass: string }> = {
+  ACTIVE: { variant: "default", label: "Hoạt động", colorClass: "bg-status-collected/15 text-status-collected" },
+  WARNING: { variant: "outline", label: "Cảnh báo", colorClass: "bg-status-pending/15 text-status-pending" },
+  PENDING: { variant: "secondary", label: "Chờ duyệt", colorClass: "bg-status-accepted/15 text-status-accepted" },
+  SUSPENDED: { variant: "destructive", label: "Đình chỉ", colorClass: "bg-destructive/15 text-destructive" },
+  REJECTED: { variant: "destructive", label: "Từ chối", colorClass: "bg-destructive/15 text-destructive" },
 };
 
 /**
@@ -56,32 +56,10 @@ const AccountsPage: React.FC = () => {
 
   const pendingAccounts = accounts.filter((a) => a.status === "PENDING");
 
-  const handleApprove = (acc: REAccount) => {
-    approveAccount(acc.id);
-    setApproveTarget(null);
-    toast({ title: "✅ Đã phê duyệt", description: `${acc.name} đã được kích hoạt thành công.` });
-  };
-
-  const handleReject = () => {
-    if (!rejectTarget || !rejectReason.trim()) return;
-    rejectAccount(rejectTarget.id);
-    setRejectTarget(null);
-    setRejectReason("");
-    toast({ title: "❌ Đã từ chối", description: `Tài khoản đã bị từ chối.` });
-  };
-
-  const handleSuspend = () => {
-    if (!suspendTarget || !suspendReason.trim()) return;
-    suspendAccount(suspendTarget.id, suspendReason, suspendDuration);
-    setSuspendTarget(null);
-    setSuspendReason("");
-    toast({ title: "⏸ Đã đình chỉ", description: `${suspendTarget.name} đã bị đình chỉ.` });
-  };
-
-  const handleReactivate = (acc: REAccount) => {
-    reactivateAccount(acc.id);
-    toast({ title: "▶️ Đã kích hoạt lại", description: `${acc.name} đã hoạt động trở lại.` });
-  };
+  const handleApprove = (acc: REAccount) => { approveAccount(acc.id); setApproveTarget(null); toast({ title: "✅ Đã phê duyệt", description: `${acc.name} đã được kích hoạt.` }); };
+  const handleReject = () => { if (!rejectTarget || !rejectReason.trim()) return; rejectAccount(rejectTarget.id); setRejectTarget(null); setRejectReason(""); toast({ title: "❌ Đã từ chối" }); };
+  const handleSuspend = () => { if (!suspendTarget || !suspendReason.trim()) return; suspendAccount(suspendTarget.id, suspendReason, suspendDuration); setSuspendTarget(null); setSuspendReason(""); toast({ title: "⏸ Đã đình chỉ" }); };
+  const handleReactivate = (acc: REAccount) => { reactivateAccount(acc.id); toast({ title: "▶️ Đã kích hoạt lại" }); };
 
   const tabs: { key: FilterTab; label: string; count?: number }[] = [
     { key: "ALL", label: "Tất cả", count: accounts.filter((a) => a.status !== "REJECTED").length },
@@ -94,39 +72,30 @@ const AccountsPage: React.FC = () => {
     <div className="space-y-5 max-w-full">
       <h1 className="text-2xl font-heading font-bold text-foreground">Quản lý tài khoản RE</h1>
 
-      {/* Pending banner */}
       {pendingAccounts.length > 0 && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-          className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 flex items-center justify-between flex-wrap gap-3"
+          className="p-4 rounded-lg bg-status-accepted/10 border border-status-accepted/30 flex items-center justify-between flex-wrap gap-3"
         >
-          <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+          <div className="flex items-center gap-2 text-status-accepted">
             <AlertTriangle className="w-4 h-4" />
             <span className="text-sm font-medium">{pendingAccounts.length} tài khoản chờ phê duyệt</span>
           </div>
           <div className="flex gap-2">
             {pendingAccounts.map((a) => (
-              <Button key={a.id} size="sm" className="h-7 text-xs" onClick={() => setApproveTarget(a)}>
-                {a.name}
-              </Button>
+              <Button key={a.id} size="sm" className="h-7 text-xs" onClick={() => setApproveTarget(a)}>{a.name}</Button>
             ))}
           </div>
         </motion.div>
       )}
 
-      {/* Filter tabs + search + sort */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex gap-1 bg-muted p-1 rounded-lg">
           {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setFilter(t.key)}
-              className={cn(
-                "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+            <button key={t.key} onClick={() => setFilter(t.key)}
+              className={cn("px-3 py-1.5 rounded-md text-xs font-medium transition-all",
                 filter === t.key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
-            >
-              {t.label} {t.count !== undefined && <span className="ml-1 opacity-60">({t.count})</span>}
-            </button>
+            >{t.label} {t.count !== undefined && <span className="ml-1 opacity-60">({t.count})</span>}</button>
           ))}
         </div>
         <div className="relative flex-1 min-w-[180px] max-w-xs">
@@ -134,9 +103,7 @@ const AccountsPage: React.FC = () => {
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm theo tên, phường..." className="pl-9 h-9 text-sm" />
         </div>
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-40 h-9 text-xs">
-            <SelectValue placeholder="Sắp xếp" />
-          </SelectTrigger>
+          <SelectTrigger className="w-40 h-9 text-xs"><SelectValue placeholder="Sắp xếp" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="joinDate">Ngày tham gia</SelectItem>
             <SelectItem value="reports">Báo cáo</SelectItem>
@@ -145,21 +112,20 @@ const AccountsPage: React.FC = () => {
         </Select>
       </div>
 
-      {/* Account cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <AnimatePresence>
           {filtered.map((acc, i) => {
             const sb = statusBadge[acc.status] || statusBadge.ACTIVE;
             return (
               <motion.div key={acc.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ delay: i * 0.05 }} layout>
-                <Card className="overflow-hidden">
+                <Card className="overflow-hidden hover:shadow-md transition-shadow duration-200">
                   <CardContent className="p-5 space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="font-heading font-semibold text-foreground">{acc.name}</h3>
                         <p className="text-xs text-muted-foreground mt-0.5">{acc.ward}</p>
                       </div>
-                      <Badge variant={sb.variant} className="text-[10px]">{sb.label}</Badge>
+                      <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full", sb.colorClass)}>{sb.label}</span>
                     </div>
                     <div className="text-sm text-muted-foreground space-y-1">
                       <p className="font-medium text-foreground">{acc.manager}</p>
@@ -167,33 +133,21 @@ const AccountsPage: React.FC = () => {
                       <p className="flex items-center gap-1.5"><Mail className="w-3 h-3" />{acc.email}</p>
                     </div>
                     <div className="flex gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{acc.reports} báo cáo</span>
-                      <span className="flex items-center gap-1"><UsersIcon className="w-3 h-3" />{acc.collectors} collector</span>
-                      <span className="flex items-center gap-1"><AlertTriangle className="w-3 h-3" />{acc.disputes} tranh chấp</span>
+                      <span className="flex items-center gap-1"><FileText className="w-3 h-3" /><span className="font-mono">{acc.reports}</span> báo cáo</span>
+                      <span className="flex items-center gap-1"><UsersIcon className="w-3 h-3" /><span className="font-mono">{acc.collectors}</span> collector</span>
+                      <span className="flex items-center gap-1"><AlertTriangle className="w-3 h-3" /><span className="font-mono">{acc.disputes}</span> tranh chấp</span>
                     </div>
                     <div className="flex gap-2 pt-1">
-                      {acc.status === "PENDING" && (
-                        <>
-                          <Button size="sm" className="h-8 text-xs flex-1" onClick={() => setApproveTarget(acc)}>
-                            <Check className="w-3 h-3 mr-1" /> Phê duyệt
-                          </Button>
-                          <Button size="sm" variant="destructive" className="h-8 text-xs flex-1" onClick={() => setRejectTarget(acc)}>
-                            <X className="w-3 h-3 mr-1" /> Từ chối
-                          </Button>
-                        </>
-                      )}
-                      {(acc.status === "ACTIVE" || acc.status === "WARNING") && (
-                        <>
-                          <Button size="sm" variant="outline" className="h-8 text-xs flex-1">👁 Chi tiết</Button>
-                          <Button size="sm" variant="destructive" className="h-8 text-xs flex-1" onClick={() => setSuspendTarget(acc)}>
-                            <Pause className="w-3 h-3 mr-1" /> Đình chỉ
-                          </Button>
-                        </>
-                      )}
+                      {acc.status === "PENDING" && (<>
+                        <Button size="sm" className="h-8 text-xs flex-1" onClick={() => setApproveTarget(acc)}><Check className="w-3 h-3 mr-1" /> Phê duyệt</Button>
+                        <Button size="sm" variant="destructive" className="h-8 text-xs flex-1" onClick={() => setRejectTarget(acc)}><X className="w-3 h-3 mr-1" /> Từ chối</Button>
+                      </>)}
+                      {(acc.status === "ACTIVE" || acc.status === "WARNING") && (<>
+                        <Button size="sm" variant="outline" className="h-8 text-xs flex-1">👁 Chi tiết</Button>
+                        <Button size="sm" variant="destructive" className="h-8 text-xs flex-1" onClick={() => setSuspendTarget(acc)}><Pause className="w-3 h-3 mr-1" /> Đình chỉ</Button>
+                      </>)}
                       {acc.status === "SUSPENDED" && (
-                        <Button size="sm" className="h-8 text-xs flex-1" onClick={() => handleReactivate(acc)}>
-                          <Play className="w-3 h-3 mr-1" /> Kích hoạt lại
-                        </Button>
+                        <Button size="sm" className="h-8 text-xs flex-1" onClick={() => handleReactivate(acc)}><Play className="w-3 h-3 mr-1" /> Kích hoạt lại</Button>
                       )}
                     </div>
                   </CardContent>
@@ -204,54 +158,34 @@ const AccountsPage: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      {/* Approve modal */}
       <Dialog open={!!approveTarget} onOpenChange={() => setApproveTarget(null)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Phê duyệt tài khoản RE</DialogTitle>
-            <DialogDescription>Xác nhận kích hoạt tài khoản này?</DialogDescription>
-          </DialogHeader>
-          {approveTarget && (
-            <div className="space-y-2 text-sm">
-              <p><strong>{approveTarget.name}</strong></p>
-              <p>{approveTarget.ward}</p>
-              <p>Quản lý: {approveTarget.manager}</p>
-            </div>
-          )}
+          <DialogHeader><DialogTitle>Phê duyệt tài khoản RE</DialogTitle><DialogDescription>Xác nhận kích hoạt tài khoản này?</DialogDescription></DialogHeader>
+          {approveTarget && (<div className="space-y-2 text-sm"><p><strong>{approveTarget.name}</strong></p><p>{approveTarget.ward}</p><p>Quản lý: {approveTarget.manager}</p></div>)}
           <DialogFooter>
             <Button variant="outline" onClick={() => setApproveTarget(null)}>Hủy</Button>
-            <Button onClick={() => approveTarget && handleApprove(approveTarget)}>Xác nhận phê duyệt</Button>
+            <Button onClick={() => approveTarget && handleApprove(approveTarget)}>Xác nhận</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Reject modal */}
       <Dialog open={!!rejectTarget} onOpenChange={() => { setRejectTarget(null); setRejectReason(""); }}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Từ chối tài khoản RE</DialogTitle>
-            <DialogDescription>Vui lòng cung cấp lý do từ chối.</DialogDescription>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Từ chối tài khoản RE</DialogTitle></DialogHeader>
           <Textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Lý do từ chối..." className="min-h-[80px]" />
           <DialogFooter>
             <Button variant="outline" onClick={() => { setRejectTarget(null); setRejectReason(""); }}>Hủy</Button>
-            <Button variant="destructive" onClick={handleReject} disabled={!rejectReason.trim()}>Xác nhận từ chối</Button>
+            <Button variant="destructive" onClick={handleReject} disabled={!rejectReason.trim()}>Xác nhận</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Suspend modal */}
       <Dialog open={!!suspendTarget} onOpenChange={() => { setSuspendTarget(null); setSuspendReason(""); }}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Đình chỉ tài khoản RE</DialogTitle>
-            <DialogDescription>Hành động này sẽ dừng toàn bộ hoạt động thu gom của phường này.</DialogDescription>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Đình chỉ tài khoản RE</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <Select value={suspendDuration} onValueChange={setSuspendDuration}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="7">7 ngày</SelectItem>
                 <SelectItem value="30">30 ngày</SelectItem>
@@ -265,7 +199,7 @@ const AccountsPage: React.FC = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setSuspendTarget(null); setSuspendReason(""); }}>Hủy</Button>
-            <Button variant="destructive" onClick={handleSuspend} disabled={!suspendReason.trim()}>Xác nhận đình chỉ</Button>
+            <Button variant="destructive" onClick={handleSuspend} disabled={!suspendReason.trim()}>Xác nhận</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

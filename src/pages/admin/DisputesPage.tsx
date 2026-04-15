@@ -12,28 +12,29 @@ import { useToast } from "@/hooks/use-toast";
 import type { Dispute } from "@/mock/admin-disputes";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getWasteClasses, getWasteLabel } from "@/lib/statusConfig";
 
 type FilterTab = "ALL" | "OPEN" | "RESOLVED";
 
 const priorityConfig = {
-  HIGH: { color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400", label: "Cao" },
-  MEDIUM: { color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400", label: "TB" },
+  HIGH: { color: "bg-destructive/15 text-destructive", label: "Cao" },
+  MEDIUM: { color: "bg-status-pending/15 text-status-pending", label: "TB" },
   LOW: { color: "bg-muted text-muted-foreground", label: "Thấp" },
 };
 
 const gradientMap: Record<string, string> = {
-  "gradient-blue": "from-blue-400 to-blue-600",
-  "gradient-green": "from-green-400 to-green-600",
-  "gradient-amber": "from-amber-400 to-amber-600",
-  "gradient-teal": "from-teal-400 to-teal-600",
-  "gradient-red": "from-red-400 to-red-600",
-  "gradient-gray": "from-gray-400 to-gray-600",
-  "gradient-purple": "from-purple-400 to-purple-600",
-  "gradient-orange": "from-orange-400 to-orange-600",
+  "gradient-blue": "from-[oklch(0.58_0.18_252)] to-[oklch(0.48_0.2_252)]",
+  "gradient-green": "from-[oklch(0.62_0.19_152)] to-[oklch(0.47_0.15_152)]",
+  "gradient-amber": "from-[oklch(0.79_0.15_85)] to-[oklch(0.7_0.18_60)]",
+  "gradient-teal": "from-[oklch(0.6_0.12_180)] to-[oklch(0.5_0.14_180)]",
+  "gradient-red": "from-[oklch(0.6_0.2_27)] to-[oklch(0.5_0.24_27)]",
+  "gradient-gray": "from-[oklch(0.6_0.01_264)] to-[oklch(0.45_0.02_264)]",
+  "gradient-purple": "from-[oklch(0.6_0.18_302)] to-[oklch(0.5_0.2_302)]",
+  "gradient-orange": "from-[oklch(0.72_0.18_46)] to-[oklch(0.6_0.2_40)]",
 };
 
 /**
- * DisputesPage — dispute resolution with split-panel detail view.
+ * DisputesPage — dispute resolution with split-panel detail view and audit timeline.
  */
 const DisputesPage: React.FC = () => {
   const { disputes, setVerdict } = useAdminStore();
@@ -41,9 +42,8 @@ const DisputesPage: React.FC = () => {
   const isMobile = useIsMobile();
   const [filter, setFilter] = useState<FilterTab>("ALL");
   const [selected, setSelected] = useState<Dispute | null>(null);
-  const [upheldConfirm, setUpheldConfirm] = useState(false);
-  const [dismissReason, setDismissReason] = useState("");
-  const [showDismiss, setShowDismiss] = useState(false);
+  const [verdictConfirm, setVerdictConfirm] = useState<"REFUND" | "REJECT" | null>(null);
+  const [verdictReason, setVerdictReason] = useState("");
 
   const filtered = useMemo(() => {
     let list = [...disputes];
@@ -61,21 +61,19 @@ const DisputesPage: React.FC = () => {
   const openCount = disputes.filter((d) => d.status === "OPEN").length;
   const resolvedCount = disputes.filter((d) => d.status !== "OPEN").length;
 
-  const handleUpheld = () => {
-    if (!selected) return;
-    setVerdict(selected.id, "RESOLVED_UPHELD");
-    toast({ title: "✅ Khiếu nại được chấp nhận", description: "Citizen được cộng lại điểm. Collector ghi nhận vi phạm." });
-    setUpheldConfirm(false);
-    setSelected({ ...selected, status: "RESOLVED_UPHELD", verdict: "UPHELD", resolvedAt: new Date().toISOString(), resolvedBy: "Admin" });
-  };
-
-  const handleDismiss = () => {
-    if (!selected || dismissReason.length < 20) return;
-    setVerdict(selected.id, "RESOLVED_DISMISSED", dismissReason);
-    toast({ title: "❌ Khiếu nại bị bác bỏ", description: "Tranh chấp đã được đóng." });
-    setShowDismiss(false);
-    setDismissReason("");
-    setSelected({ ...selected, status: "RESOLVED_DISMISSED", verdict: "DISMISSED", resolvedAt: new Date().toISOString(), resolvedBy: "Admin", resolvedReason: dismissReason });
+  const handleVerdict = () => {
+    if (!selected || verdictReason.length < 10) return;
+    if (verdictConfirm === "REFUND") {
+      setVerdict(selected.id, "RESOLVED_REFUNDED", verdictReason);
+      toast({ title: "✅ Chứng nhận + Hoàn điểm", description: "Citizen được cộng lại điểm. Enterprise ghi nhận penalty." });
+      setSelected({ ...selected, status: "RESOLVED_REFUNDED", verdict: "REFUNDED", resolvedAt: new Date().toISOString(), resolvedBy: "Admin", resolvedReason: verdictReason });
+    } else {
+      setVerdict(selected.id, "RESOLVED_REJECTED", verdictReason);
+      toast({ title: "❌ Bác bỏ khiếu nại", description: "Trust Score Citizen bị trừ." });
+      setSelected({ ...selected, status: "RESOLVED_REJECTED", verdict: "REJECTED", resolvedAt: new Date().toISOString(), resolvedBy: "Admin", resolvedReason: verdictReason });
+    }
+    setVerdictConfirm(null);
+    setVerdictReason("");
   };
 
   const tabs: { key: FilterTab; label: string; count: number }[] = [
@@ -84,15 +82,16 @@ const DisputesPage: React.FC = () => {
     { key: "RESOLVED", label: "Đã giải quyết", count: resolvedCount },
   ];
 
-  /** Detail panel content (used in both Sheet and inline) */
   const DetailContent: React.FC<{ d: Dispute }> = ({ d }) => (
     <div className="space-y-5 p-1">
-      {/* Header info */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="outline" className="font-mono text-xs">{d.id}</Badge>
           <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full", priorityConfig[d.priority].color)}>
             {priorityConfig[d.priority].label}
+          </span>
+          <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full", getWasteClasses(d.wasteType))}>
+            {getWasteLabel(d.wasteType)}
           </span>
         </div>
         <p className="text-sm text-muted-foreground">{d.reportAddress}</p>
@@ -102,16 +101,16 @@ const DisputesPage: React.FC = () => {
       {/* Evidence comparison */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground">📸 Ảnh báo cáo của Citizen</p>
-          <div className={cn("aspect-square rounded-xl bg-gradient-to-br flex items-center justify-center", gradientMap[d.citizen.reportPhoto] || "from-gray-400 to-gray-600")}>
+          <p className="text-xs font-semibold text-muted-foreground">📸 Ảnh báo cáo — Citizen</p>
+          <div className={cn("aspect-square rounded-xl bg-gradient-to-br flex items-center justify-center", gradientMap[d.citizen.reportPhoto] || gradientMap["gradient-gray"])}>
             <Recycle className="w-10 h-10 text-white/60" />
           </div>
           <p className="text-sm font-medium text-foreground">{d.citizen.name}</p>
           <p className="text-xs text-muted-foreground">{d.citizen.phone}</p>
         </div>
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground">📸 Ảnh thu gom của Collector</p>
-          <div className={cn("aspect-square rounded-xl bg-gradient-to-br flex items-center justify-center", gradientMap[d.collector.collectPhoto] || "from-gray-400 to-gray-600")}>
+          <p className="text-xs font-semibold text-muted-foreground">📸 Ảnh thu gom — Collector</p>
+          <div className={cn("aspect-square rounded-xl bg-gradient-to-br flex items-center justify-center", gradientMap[d.collector.collectPhoto] || gradientMap["gradient-gray"])}>
             <CheckCircle className="w-10 h-10 text-white/60" />
           </div>
           <p className="text-sm font-medium text-foreground">{d.collector.name}</p>
@@ -120,15 +119,32 @@ const DisputesPage: React.FC = () => {
       </div>
 
       {/* Citizen claim */}
-      <div className="p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
-        <p className="text-xs font-semibold text-yellow-700 dark:text-yellow-400 mb-1">Khiếu nại của Citizen:</p>
-        <p className="text-sm text-yellow-900 dark:text-yellow-200 italic">"{d.citizenClaim}"</p>
+      <div className="p-4 rounded-lg bg-status-pending/10 border border-status-pending/20">
+        <p className="text-xs font-semibold text-status-pending mb-1">Khiếu nại của Citizen:</p>
+        <p className="text-sm italic text-foreground">"{d.citizenClaim}"</p>
       </div>
+
+      {/* Audit Timeline */}
+      {d.timeline && d.timeline.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Dòng thời gian</p>
+          <div className="relative pl-4 space-y-3 border-l-2 border-border">
+            {d.timeline.map((event, i) => (
+              <div key={i} className="relative">
+                <div className="absolute -left-[calc(1rem+5px)] top-1 w-2.5 h-2.5 rounded-full bg-primary border-2 border-background" />
+                <p className="text-xs font-mono text-muted-foreground">{event.time}</p>
+                <p className="text-sm text-foreground">{event.event}</p>
+                <p className="text-xs text-muted-foreground">{event.actor}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Resolution info */}
       {d.status !== "OPEN" && (
         <div className="p-3 rounded-lg bg-muted space-y-1">
-          <p className="text-xs font-semibold">Kết quả: <Badge variant={d.verdict === "UPHELD" ? "default" : "destructive"} className="text-[10px] ml-1">{d.verdict}</Badge></p>
+          <p className="text-xs font-semibold">Kết quả: <Badge variant={d.verdict === "REFUNDED" ? "default" : "destructive"} className="text-[10px] ml-1">{d.verdict === "REFUNDED" ? "Hoàn điểm" : "Bác bỏ"}</Badge></p>
           {d.resolvedAt && <p className="text-xs text-muted-foreground">Giải quyết: {d.resolvedAt}</p>}
           {d.resolvedReason && <p className="text-xs text-muted-foreground">Lý do: {d.resolvedReason}</p>}
         </div>
@@ -137,10 +153,10 @@ const DisputesPage: React.FC = () => {
       {/* Actions */}
       {d.status === "OPEN" && (
         <div className="space-y-2 pt-2">
-          <Button className="w-full h-11" onClick={() => setUpheldConfirm(true)}>
-            ✅ Chấp nhận khiếu nại
+          <Button className="w-full h-11 bg-status-collected text-white hover:bg-status-verified" onClick={() => setVerdictConfirm("REFUND")}>
+            ✅ Chứng nhận + Hoàn điểm
           </Button>
-          <Button variant="destructive" className="w-full h-11" onClick={() => setShowDismiss(true)}>
+          <Button variant="destructive" className="w-full h-11" onClick={() => setVerdictConfirm("REJECT")}>
             ❌ Bác bỏ khiếu nại
           </Button>
           <Button variant="outline" className="w-full h-11 opacity-50 cursor-not-allowed" disabled>
@@ -155,7 +171,6 @@ const DisputesPage: React.FC = () => {
     <div className="space-y-5 max-w-full">
       <h1 className="text-2xl font-heading font-bold text-foreground">Quản lý tranh chấp</h1>
 
-      {/* Stats chips */}
       <div className="flex flex-wrap gap-2">
         <Badge variant="outline">{disputes.length} Tổng</Badge>
         <Badge variant="destructive">{openCount} Đang mở</Badge>
@@ -163,25 +178,17 @@ const DisputesPage: React.FC = () => {
         <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Avg 3h 40m</Badge>
       </div>
 
-      {/* Filter tabs */}
       <div className="flex gap-1 bg-muted p-1 rounded-lg w-fit">
         {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setFilter(t.key)}
-            className={cn(
-              "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+          <button key={t.key} onClick={() => setFilter(t.key)}
+            className={cn("px-3 py-1.5 rounded-md text-xs font-medium transition-all",
               filter === t.key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
-          >
-            {t.label} ({t.count})
-          </button>
+          >{t.label} ({t.count})</button>
         ))}
       </div>
 
-      {/* Content: List + Optional Detail Panel */}
       <div className="flex gap-4">
-        {/* Dispute list */}
         <div className={cn("space-y-3 flex-1 min-w-0", selected && !isMobile && "max-w-[40%]")}>
           <AnimatePresence>
             {filtered.map((d, i) => (
@@ -199,15 +206,18 @@ const DisputesPage: React.FC = () => {
                       {d.status === "OPEN" ? (
                         <Badge variant="destructive" className="text-[10px]">Đang mở</Badge>
                       ) : (
-                        <Badge variant={d.verdict === "UPHELD" ? "default" : "secondary"} className="text-[10px]">
-                          {d.verdict === "UPHELD" ? "Chấp nhận" : "Bác bỏ"}
+                        <Badge variant={d.verdict === "REFUNDED" ? "default" : "secondary"} className="text-[10px]">
+                          {d.verdict === "REFUNDED" ? "Hoàn điểm" : "Bác bỏ"}
                         </Badge>
                       )}
                     </div>
                     <p className="text-sm font-medium text-foreground">{d.citizen.name}</p>
                     <p className="text-xs text-muted-foreground line-clamp-2">{d.citizenClaim}</p>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{d.wasteType} · {d.collector.name}</span>
+                      <span className="flex items-center gap-1">
+                        <span className={cn("px-1.5 py-0.5 rounded text-[9px] font-semibold", getWasteClasses(d.wasteType))}>{getWasteLabel(d.wasteType)}</span>
+                        · {d.collector.name}
+                      </span>
                       {d.status === "OPEN" && (
                         <span className="text-primary font-medium flex items-center gap-0.5">
                           Xem xét <ArrowRight className="w-3 h-3" />
@@ -221,11 +231,8 @@ const DisputesPage: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        {/* Desktop detail panel */}
         {selected && !isMobile && (
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
+          <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="w-[60%] sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto"
           >
@@ -244,44 +251,33 @@ const DisputesPage: React.FC = () => {
         )}
       </div>
 
-      {/* Mobile detail sheet */}
       {isMobile && (
         <Sheet open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
           <SheetContent side="bottom" className="h-[90vh] overflow-y-auto rounded-t-2xl">
-            <SheetHeader>
-              <SheetTitle>Chi tiết tranh chấp</SheetTitle>
-            </SheetHeader>
+            <SheetHeader><SheetTitle>Chi tiết tranh chấp</SheetTitle></SheetHeader>
             {selected && <DetailContent d={selected} />}
           </SheetContent>
         </Sheet>
       )}
 
-      {/* Upheld confirmation modal */}
-      <Dialog open={upheldConfirm} onOpenChange={setUpheldConfirm}>
+      {/* Verdict confirmation modal */}
+      <Dialog open={!!verdictConfirm} onOpenChange={(o) => { if (!o) { setVerdictConfirm(null); setVerdictReason(""); } }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Xác nhận chấp nhận khiếu nại</DialogTitle>
-            <DialogDescription>Citizen sẽ được cộng lại điểm. Collector ghi nhận vi phạm.</DialogDescription>
+            <DialogTitle>{verdictConfirm === "REFUND" ? "Chứng nhận + Hoàn điểm" : "Bác bỏ khiếu nại"}</DialogTitle>
+            <DialogDescription>
+              {verdictConfirm === "REFUND"
+                ? "Citizen sẽ được cộng lại điểm đã trừ. Enterprise ghi nhận penalty."
+                : "Trust Score Citizen sẽ bị trừ."
+              }
+              <br />Vui lòng nhập lý do (tối thiểu 10 ký tự).
+            </DialogDescription>
           </DialogHeader>
+          <Textarea value={verdictReason} onChange={(e) => setVerdictReason(e.target.value)} placeholder="Lý do quyết định..." className="min-h-[100px]" />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setUpheldConfirm(false)}>Hủy</Button>
-            <Button onClick={handleUpheld}>Xác nhận</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dismiss modal */}
-      <Dialog open={showDismiss} onOpenChange={(o) => { setShowDismiss(o); if (!o) setDismissReason(""); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Bác bỏ khiếu nại</DialogTitle>
-            <DialogDescription>Vui lòng nhập lý do (tối thiểu 20 ký tự).</DialogDescription>
-          </DialogHeader>
-          <Textarea value={dismissReason} onChange={(e) => setDismissReason(e.target.value)} placeholder="Lý do bác bỏ..." className="min-h-[100px]" />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowDismiss(false); setDismissReason(""); }}>Hủy</Button>
-            <Button variant="destructive" onClick={handleDismiss} disabled={dismissReason.length < 20}>
-              Bác bỏ ({dismissReason.length}/20)
+            <Button variant="outline" onClick={() => { setVerdictConfirm(null); setVerdictReason(""); }}>Hủy</Button>
+            <Button variant={verdictConfirm === "REFUND" ? "default" : "destructive"} onClick={handleVerdict} disabled={verdictReason.length < 10}>
+              Xác nhận ({verdictReason.length}/10)
             </Button>
           </DialogFooter>
         </DialogContent>
