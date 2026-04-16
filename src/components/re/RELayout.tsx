@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { reInfo } from "@/mock/re-dashboard";
 
-/** Nav item configuration */
 interface NavItem {
   label: string;
   icon: React.ElementType;
@@ -45,7 +44,7 @@ const mobileNavItems = navItems.slice(0, 4);
 
 /**
  * RELayout — layout wrapper for all /re/* pages.
- * Desktop: fixed 240px sidebar + scrolling main. Mobile: header + bottom nav.
+ * Sidebar always uses dark slate theme regardless of light/dark mode.
  */
 const RELayout: React.FC = () => {
   const location = useLocation();
@@ -61,17 +60,17 @@ const RELayout: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen flex bg-background font-sans">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-60 border-r border-border bg-sidebar-background z-40">
+    <div className="min-h-screen flex bg-background font-body">
+      {/* Desktop Sidebar — always dark slate */}
+      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-60 border-r border-sidebar-border bg-sidebar z-40">
         {/* Logo */}
         <div className="p-5 flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-            <Leaf className="w-5 h-5 text-primary-foreground" />
+          <div className="w-9 h-9 rounded-xl bg-sidebar-primary flex items-center justify-center">
+            <Leaf className="w-5 h-5 text-sidebar-primary-foreground" />
           </div>
           <div>
             <span className="font-heading font-bold text-base text-sidebar-foreground">EcoConnect</span>
-            <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">RE</Badge>
+            <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0 bg-sidebar-accent text-sidebar-accent-foreground border-0">RE</Badge>
           </div>
         </div>
 
@@ -82,33 +81,33 @@ const RELayout: React.FC = () => {
               key={item.path}
               to={item.disabled ? "#" : item.path}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
                 isActive(item.path)
-                  ? "bg-primary/10 text-primary shadow-sm"
+                  ? "bg-sidebar-primary/15 text-sidebar-primary"
                   : item.disabled
-                  ? "text-muted-foreground/40 cursor-not-allowed"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:translate-x-0.5"
+                  ? "text-sidebar-foreground/30 cursor-not-allowed"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               )}
               onClick={(e) => item.disabled && e.preventDefault()}
             >
               <item.icon className={cn("w-[18px] h-[18px] transition-transform duration-200", isActive(item.path) && "scale-110")} />
               <span>{item.label}</span>
               {item.phase2 && (
-                <span className="ml-auto text-[10px] text-muted-foreground">Phase 2</span>
+                <span className="ml-auto text-[10px] text-sidebar-foreground/40">Phase 2</span>
               )}
             </Link>
           ))}
         </nav>
 
         {/* RE info bottom */}
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-sidebar-border">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">
+            <div className="w-9 h-9 rounded-full bg-sidebar-primary/20 flex items-center justify-center text-sm font-bold text-sidebar-primary">
               LM
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium text-sidebar-foreground truncate">{reInfo.manager}</div>
-              <div className="text-xs text-muted-foreground truncate">{reInfo.ward}</div>
+              <div className="text-xs text-sidebar-foreground/50 truncate">{reInfo.ward}</div>
             </div>
           </div>
         </div>
@@ -134,7 +133,7 @@ const RELayout: React.FC = () => {
           </div>
 
           <div className="flex-1 text-center">
-            <span className="font-heading text-sm font-medium text-muted-foreground tabular-nums">
+            <span className="font-mono text-sm font-medium text-muted-foreground tabular-nums">
               {clock.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </span>
           </div>
