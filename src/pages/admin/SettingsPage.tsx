@@ -94,16 +94,15 @@ const SettingsPage: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-start gap-4">
-            {/* QR code placeholder */}
             <div className="w-28 h-28 border-2 border-dashed border-border rounded-xl flex items-center justify-center bg-muted">
               <div className="grid grid-cols-5 gap-0.5">
                 {Array.from({ length: 25 }).map((_, i) => (
-                  <div key={i} className={`w-4 h-4 rounded-sm ${Math.random() > 0.5 ? "bg-foreground" : "bg-transparent"}`} />
+                  <div key={i} className={`w-4 h-4 rounded-sm ${[0,1,3,4,5,9,10,14,15,19,20,21,23,24].includes(i) ? "bg-foreground" : "bg-transparent"}`} />
                 ))}
               </div>
             </div>
             <div className="flex-1 space-y-2">
-              <p className="text-sm font-medium text-foreground">ecoconnect.app/admin</p>
+              <p className="text-sm font-medium text-foreground font-mono">ecoconnect.app/admin</p>
               <p className="text-xs text-muted-foreground">Quét mã QR hoặc sao chép link để cài đặt ứng dụng trên thiết bị di động.</p>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={copyLink} className="h-8 text-xs">
@@ -125,7 +124,7 @@ const SettingsPage: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <div className="flex justify-between"><span>Phiên bản</span><span className="text-foreground font-mono">EcoConnect v1.0.0-mvp</span></div>
-          <div className="flex justify-between"><span>Triển khai cuối</span><span className="text-foreground">2025-01-10</span></div>
+          <div className="flex justify-between"><span>Triển khai cuối</span><span className="text-foreground font-mono">2025-01-10</span></div>
         </CardContent>
       </Card>
 
