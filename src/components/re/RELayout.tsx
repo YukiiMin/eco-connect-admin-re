@@ -116,8 +116,8 @@ const RELayout: React.FC = () => {
               LM
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-sidebar-foreground truncate">{reInfo.manager}</div>
-              <div className="text-xs text-sidebar-foreground/50 truncate">{reInfo.ward}</div>
+              <div className="text-sm font-medium text-sidebar-foreground truncate">{enterprise.manager}</div>
+              <div className="text-xs text-sidebar-foreground/50 truncate">{enterprise.name}</div>
             </div>
           </div>
         </div>
