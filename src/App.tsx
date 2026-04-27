@@ -20,6 +20,10 @@ import CollectorsPage from "./pages/re/CollectorsPage.tsx";
 import AnalyticsPage from "./pages/re/AnalyticsPage.tsx";
 import PointsPage from "./pages/re/PointsPage.tsx";
 import ConfigPage from "./pages/re/ConfigPage.tsx";
+import HubsPage from "./pages/re/HubsPage.tsx";
+import HubDetailPage from "./pages/re/HubDetailPage.tsx";
+import TeamsPage from "./pages/re/TeamsPage.tsx";
+import TeamDetailPage from "./pages/re/TeamDetailPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +51,10 @@ const App = () => (
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="points" element={<PointsPage />} />
             <Route path="config" element={<ConfigPage />} />
+            <Route path="hubs" element={<HubsPage />} />
+            <Route path="hubs/:hubId" element={<HubDetailPage />} />
+            <Route path="teams" element={<TeamsPage />} />
+            <Route path="teams/:teamId" element={<TeamDetailPage />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
