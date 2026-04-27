@@ -34,15 +34,22 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "Tổng quan", icon: LayoutDashboard, path: "/re/dashboard" },
-  { label: "Hàng đợi", icon: ListChecks, path: "/re/queue" },
-  { label: "Điều phối", icon: Truck, path: "/re/dispatch" },
-  { label: "Collector", icon: Users, path: "/re/collectors" },
-  { label: "Báo cáo", icon: BarChart3, path: "/re/analytics" },
+  { label: "Báo cáo", icon: ClipboardList, path: "/re/queue" },
+  { label: "Tracking", icon: Activity, path: "/re/dispatch" },
+  { label: "Cơ sở", icon: Building2, path: "/re/hubs" },
+  { label: "Đội thu gôm", icon: UsersRound, path: "/re/teams" },
+  { label: "Nhân sự", icon: Users, path: "/re/collectors" },
+  { label: "Phân tích", icon: BarChart3, path: "/re/analytics" },
   { label: "Điểm thưởng", icon: Star, path: "/re/points" },
   { label: "Cấu hình", icon: Settings, path: "/re/config" },
 ];
 
-const mobileNavItems = navItems.slice(0, 4);
+const mobileNavItems: NavItem[] = [
+  { label: "Tổng quan", icon: LayoutDashboard, path: "/re/dashboard" },
+  { label: "Báo cáo", icon: ClipboardList, path: "/re/queue" },
+  { label: "Tracking", icon: Activity, path: "/re/dispatch" },
+  { label: "Đội", icon: UsersRound, path: "/re/teams" },
+];
 
 /**
  * RELayout — layout wrapper for all /re/* pages.
