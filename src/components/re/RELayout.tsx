@@ -3,9 +3,11 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
-  ListChecks,
-  Truck,
+  ClipboardList,
+  Activity,
   Users,
+  Building2,
+  UsersRound,
   BarChart3,
   Star,
   Settings,
@@ -20,7 +22,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { reInfo } from "@/mock/re-dashboard";
+import { useREStore } from "@/store/useREStore";
 
 interface NavItem {
   label: string;
