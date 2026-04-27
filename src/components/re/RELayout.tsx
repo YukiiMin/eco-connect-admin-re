@@ -3,9 +3,11 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
-  ListChecks,
-  Truck,
+  ClipboardList,
+  Activity,
   Users,
+  Building2,
+  UsersRound,
   BarChart3,
   Star,
   Settings,
@@ -20,7 +22,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { reInfo } from "@/mock/re-dashboard";
+import { useREStore } from "@/store/useREStore";
 
 interface NavItem {
   label: string;
@@ -32,15 +34,22 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "Tổng quan", icon: LayoutDashboard, path: "/re/dashboard" },
-  { label: "Hàng đợi", icon: ListChecks, path: "/re/queue" },
-  { label: "Điều phối", icon: Truck, path: "/re/dispatch" },
-  { label: "Collector", icon: Users, path: "/re/collectors" },
-  { label: "Báo cáo", icon: BarChart3, path: "/re/analytics" },
+  { label: "Báo cáo", icon: ClipboardList, path: "/re/queue" },
+  { label: "Tracking", icon: Activity, path: "/re/dispatch" },
+  { label: "Cơ sở", icon: Building2, path: "/re/hubs" },
+  { label: "Đội thu gôm", icon: UsersRound, path: "/re/teams" },
+  { label: "Nhân sự", icon: Users, path: "/re/collectors" },
+  { label: "Phân tích", icon: BarChart3, path: "/re/analytics" },
   { label: "Điểm thưởng", icon: Star, path: "/re/points" },
   { label: "Cấu hình", icon: Settings, path: "/re/config" },
 ];
 
-const mobileNavItems = navItems.slice(0, 4);
+const mobileNavItems: NavItem[] = [
+  { label: "Tổng quan", icon: LayoutDashboard, path: "/re/dashboard" },
+  { label: "Báo cáo", icon: ClipboardList, path: "/re/queue" },
+  { label: "Tracking", icon: Activity, path: "/re/dispatch" },
+  { label: "Đội", icon: UsersRound, path: "/re/teams" },
+];
 
 /**
  * RELayout — layout wrapper for all /re/* pages.
@@ -49,6 +58,7 @@ const mobileNavItems = navItems.slice(0, 4);
 const RELayout: React.FC = () => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const enterprise = useREStore((s) => s.enterprise);
   const [clock, setClock] = useState(new Date());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -57,7 +67,7 @@ const RELayout: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + "/");
 
   return (
     <div className="min-h-screen flex bg-background font-body">
@@ -70,7 +80,7 @@ const RELayout: React.FC = () => {
           </div>
           <div>
             <span className="font-heading font-bold text-base text-sidebar-foreground">EcoConnect</span>
-            <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0 bg-sidebar-accent text-sidebar-accent-foreground border-0">RE</Badge>
+            <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0 bg-sidebar-accent text-sidebar-accent-foreground border-0">Enterprise</Badge>
           </div>
         </div>
 
@@ -106,8 +116,8 @@ const RELayout: React.FC = () => {
               LM
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-sidebar-foreground truncate">{reInfo.manager}</div>
-              <div className="text-xs text-sidebar-foreground/50 truncate">{reInfo.ward}</div>
+              <div className="text-sm font-medium text-sidebar-foreground truncate">{enterprise.manager}</div>
+              <div className="text-xs text-sidebar-foreground/50 truncate">{enterprise.name}</div>
             </div>
           </div>
         </div>
@@ -128,7 +138,7 @@ const RELayout: React.FC = () => {
           <div className="flex items-center gap-2">
             <Leaf className="w-5 h-5 text-primary lg:hidden" />
             <span className="font-heading font-semibold text-sm text-foreground hidden sm:inline">
-              RE Manager
+              Enterprise Portal
             </span>
           </div>
 
