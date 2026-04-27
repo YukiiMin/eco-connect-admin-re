@@ -58,6 +58,7 @@ const mobileNavItems: NavItem[] = [
 const RELayout: React.FC = () => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const enterprise = useREStore((s) => s.enterprise);
   const [clock, setClock] = useState(new Date());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -66,7 +67,7 @@ const RELayout: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + "/");
 
   return (
     <div className="min-h-screen flex bg-background font-body">
