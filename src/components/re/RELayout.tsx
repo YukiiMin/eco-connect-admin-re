@@ -80,7 +80,7 @@ const RELayout: React.FC = () => {
           </div>
           <div>
             <span className="font-heading font-bold text-base text-sidebar-foreground">EcoConnect</span>
-            <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0 bg-sidebar-accent text-sidebar-accent-foreground border-0">RE</Badge>
+            <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0 bg-sidebar-accent text-sidebar-accent-foreground border-0">Enterprise</Badge>
           </div>
         </div>
 
@@ -138,7 +138,7 @@ const RELayout: React.FC = () => {
           <div className="flex items-center gap-2">
             <Leaf className="w-5 h-5 text-primary lg:hidden" />
             <span className="font-heading font-semibold text-sm text-foreground hidden sm:inline">
-              RE Manager
+              Enterprise Portal
             </span>
           </div>
 
